@@ -13,7 +13,9 @@ export const Snake: React.FC<Props> = ({ dots }) => {
                     left: `${dot[0]}%`,
                     top: `${dot[1]}%`,
                 };
-                return <div className="snakeDot" key={i} style={style}></div>;
+                const className =
+                    i === dots.length - 1 ? "snakeHead" : "snakeDot";
+                return <div className={className} key={i} style={style}></div>;
             })}
         </div>
     );
