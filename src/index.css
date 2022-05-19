@@ -5,7 +5,11 @@
     height: 600px;
     border: 2px solid black;
 }
-
+.gameInfo{
+    position:relative;
+    margin:  auto;
+    text-align: center;
+}
 .snakeDot{
     position: absolute;
     width: 2%;

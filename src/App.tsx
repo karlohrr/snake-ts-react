@@ -23,6 +23,42 @@ const getRandomCoords = () => {
     const y = Math.floor((Math.random() * max + min) / 2) * 2;
     return [x, y];
 };
+
+const getNextHeadPosition = (currDir: Direction, head: number[]) => {
+    switch (currDir) {
+        case dir.up:
+            head = [head[0], head[1] - 2];
+            break;
+        case dir.right:
+            head = [head[0] + 2, head[1]];
+            break;
+        case dir.down:
+            head = [head[0], head[1] + 2];
+            break;
+        case dir.left:
+            head = [head[0] - 2, head[1]];
+            break;
+    }
+    return head;
+};
+const checkInBounds = (head: number[]) => {
+    const min = 0;
+    const max = 98;
+
+    return head[0] >= min && head[1] >= min && head[0] <= max && head[1] <= max;
+};
+const getNextUpdateInterval = (currInterval: number) => {
+    const min = 50;
+    const perc = 0.15;
+    if (currInterval <= min) return min;
+    const diff = Math.floor(currInterval * perc);
+    const nextSpeed = currInterval - diff;
+    return nextSpeed < min ? min : nextSpeed;
+};
+
+const checkCheckEat = (head: number[], food: number[]) =>
+    head[0] === food[0] && head[1] === food[1];
+
 const startDots = [
     [0, 0],
     [2, 0],
@@ -35,6 +71,7 @@ function App() {
     const [direction, setDirection] = useState<Direction>(dir.right);
     const [prevDirection, setPrevDirection] = useState(dir.up);
     const [updateInt, setUpdateInt] = useState(startInterval);
+    const [score, setScore] = useState(0);
     const snakeDotsRef = useRef(startDots);
     snakeDotsRef.current = snakeDots;
     const dirRef = useRef(dir.right);
@@ -95,6 +132,7 @@ function App() {
                 setDirection(dir.right);
                 setFoodPos(getRandomCoords());
                 setUpdateInt(startInterval);
+                setScore(0);
             } else {
                 if (!checkCheckEat(head, foodPosRef.current)) {
                     dots.shift();
@@ -102,6 +140,7 @@ function App() {
                     //TODO: move to new func "progress"
                     setFoodPos(getRandomCoords());
                     setUpdateInt((prevInt) => getNextUpdateInterval(prevInt));
+                    setScore((prev) => prev + 1);
                 }
             }
             setSnakeDots(dots);
@@ -114,45 +153,15 @@ function App() {
     }, []);
 
     return (
-        <div className="gameArea">
-            <Snake dots={snakeDots} />
-            <Food position={foodPos} />
+        <div>
+            <div className="gameInfo">Score: {score}</div>
+            <div className="gameArea">
+                <Snake dots={snakeDots} />
+                <Food position={foodPos} />
+            </div>
+            <div className="gameInfo">Current speed {updateInt}</div>
         </div>
     );
 }
 
 export default App;
-
-const getNextHeadPosition = (currDir: Direction, head: number[]) => {
-    switch (currDir) {
-        case dir.up:
-            head = [head[0], head[1] - 2];
-            break;
-        case dir.right:
-            head = [head[0] + 2, head[1]];
-            break;
-        case dir.down:
-            head = [head[0], head[1] + 2];
-            break;
-        case dir.left:
-            head = [head[0] - 2, head[1]];
-            break;
-    }
-    return head;
-};
-const checkInBounds = (head: number[]) => {
-    const min = 0;
-    const max = 98;
-
-    return head[0] >= min && head[1] >= min && head[0] <= max && head[1] <= max;
-};
-const getNextUpdateInterval = (currInterval: number) => {
-    const min = 50;
-    const perc = 0.15;
-    if (currInterval <= min) return min;
-    const diff = currInterval * perc;
-    return currInterval - diff;
-};
-
-const checkCheckEat = (head: number[], food: number[]) =>
-    head[0] === food[0] && head[1] === food[1];
