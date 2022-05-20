@@ -24,6 +24,14 @@ const getRandomCoords = () => {
     return [x, y];
 };
 
+const getFoodPositions = (count: number) => {
+    const positions: number[][] = [];
+    for (let i = 0; i < count; i++) {
+        positions.push(getRandomCoords());
+    }
+    return positions;
+};
+
 const getNextHeadPosition = (currDir: Direction, head: number[]) => {
     switch (currDir) {
         case dir.up:
@@ -47,8 +55,18 @@ const checkInBounds = (head: number[]) => {
 
     return head[0] >= min && head[1] >= min && head[0] <= max && head[1] <= max;
 };
+
+const checkCollideBody = (head: number[], body: number[][]) => {
+    console.log(head);
+    console.log(body);
+    for (const dot of body) {
+        if (head[0] === dot[0] && head[1] === dot[1]) return true;
+    }
+    return false;
+};
+
 const getNextUpdateInterval = (currInterval: number) => {
-    const min = 50;
+    const min = 45;
     const perc = 0.15;
     if (currInterval <= min) return min;
     const diff = Math.floor(currInterval * perc);
@@ -56,8 +74,12 @@ const getNextUpdateInterval = (currInterval: number) => {
     return nextSpeed < min ? min : nextSpeed;
 };
 
-const checkCheckEat = (head: number[], food: number[]) =>
-    head[0] === food[0] && head[1] === food[1];
+const checkCheckEat = (head: number[], foods: number[][]) => {
+    for (const food of foods) {
+        if (head[0] === food[0] && head[1] === food[1]) return true;
+    }
+    return false;
+};
 
 const startDots = [
     [0, 0],
@@ -67,7 +89,7 @@ const startDots = [
 const startInterval = 250;
 function App() {
     const [snakeDots, setSnakeDots] = useState(startDots);
-    const [foodPos, setFoodPos] = useState(getRandomCoords());
+    const [foodPos, setFoodPos] = useState(getFoodPositions(10));
     const [direction, setDirection] = useState<Direction>(dir.right);
     const [prevDirection, setPrevDirection] = useState(dir.up);
     const [updateInt, setUpdateInt] = useState(startInterval);
@@ -119,6 +141,8 @@ function App() {
             let dots = [...snakeDotsRef.current];
             let originalHead = dots[dots.length - 1];
             let neck = dots[dots.length - 2];
+            const body = [...dots];
+            body.pop();
 
             // prevent from going backward if direction input is fast
             let head = getNextHeadPosition(currDir, originalHead);
@@ -126,11 +150,11 @@ function App() {
                 head = getNextHeadPosition(prevDir, originalHead);
 
             dots.push(head);
-            if (!checkInBounds(head)) {
+            if (!checkInBounds(head) || checkCollideBody(head, body)) {
                 //TODO: move to new func "reset"
                 dots = startDots;
                 setDirection(dir.right);
-                setFoodPos(getRandomCoords());
+                setFoodPos(getFoodPositions(10));
                 setUpdateInt(startInterval);
                 setScore(0);
             } else {
@@ -138,7 +162,7 @@ function App() {
                     dots.shift();
                 } else {
                     //TODO: move to new func "progress"
-                    setFoodPos(getRandomCoords());
+                    setFoodPos(getFoodPositions(10));
                     setUpdateInt((prevInt) => getNextUpdateInterval(prevInt));
                     setScore((prev) => prev + 1);
                 }
@@ -157,7 +181,7 @@ function App() {
             <div className="gameInfo">Score: {score}</div>
             <div className="gameArea">
                 <Snake dots={snakeDots} />
-                <Food position={foodPos} />
+                <Food positions={foodPos} />
             </div>
             <div className="gameInfo">Current speed {updateInt}</div>
         </div>

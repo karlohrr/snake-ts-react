@@ -1,13 +1,20 @@
 import React from "react";
 
 interface Props {
-    position: number[];
+    positions: number[][];
 }
 
-export const Food: React.FC<Props> = ({ position }) => {
-    const style = {
-        left: `${position[0]}%`,
-        top: `${position[1]}%`,
-    };
-    return <div className="food" style={style}></div>;
+export const Food: React.FC<Props> = ({ positions }) => {
+    return (
+        <div>
+            {positions.map((dot, i) => {
+                // console.log(dot);
+                const style = {
+                    left: `${dot[0]}%`,
+                    top: `${dot[1]}%`,
+                };
+                return <div className="food" key={i} style={style}></div>;
+            })}
+        </div>
+    );
 };
