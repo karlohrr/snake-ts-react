@@ -65,15 +65,6 @@ const checkCollideBody = (head: number[], body: number[][]) => {
     return false;
 };
 
-const getNextUpdateInterval = (currInterval: number) => {
-    const min = 45;
-    const perc = 0.15;
-    if (currInterval <= min) return min;
-    const diff = Math.floor(currInterval * perc);
-    const nextSpeed = currInterval - diff;
-    return nextSpeed < min ? min : nextSpeed;
-};
-
 const checkCheckEat = (head: number[], foods: number[][]) => {
     for (const food of foods) {
         if (head[0] === food[0] && head[1] === food[1]) return true;
@@ -86,13 +77,18 @@ const startDots = [
     [2, 0],
     [4, 0],
 ];
-const startInterval = 250;
+const calcInterval = (perSec: number) => {
+    return 1000 / perSec;
+};
+
+const updateStep = 1;
+const foodDots = 10;
 function App() {
     const [snakeDots, setSnakeDots] = useState(startDots);
-    const [foodPos, setFoodPos] = useState(getFoodPositions(10));
+    const [foodPos, setFoodPos] = useState(getFoodPositions(foodDots));
     const [direction, setDirection] = useState<Direction>(dir.right);
     const [prevDirection, setPrevDirection] = useState(dir.up);
-    const [updateInt, setUpdateInt] = useState(startInterval);
+    const [updatesPerSec, setUpdatesPerSec] = useState(4);
     const [score, setScore] = useState(0);
     const snakeDotsRef = useRef(startDots);
     snakeDotsRef.current = snakeDots;
@@ -100,8 +96,8 @@ function App() {
     dirRef.current = direction;
     const prevDirRef = useRef(dir.up);
     prevDirRef.current = prevDirection;
-    const updateIntRef = useRef(updateInt);
-    updateIntRef.current = updateInt;
+    const updatesPerSecRef = useRef(updatesPerSec);
+    updatesPerSecRef.current = updatesPerSec;
     const foodPosRef = useRef(foodPos);
     foodPosRef.current = foodPos;
 
@@ -155,7 +151,7 @@ function App() {
                 dots = startDots;
                 setDirection(dir.right);
                 setFoodPos(getFoodPositions(10));
-                setUpdateInt(startInterval);
+                setUpdatesPerSec(4);
                 setScore(0);
             } else {
                 if (!checkCheckEat(head, foodPosRef.current)) {
@@ -163,14 +159,17 @@ function App() {
                 } else {
                     //TODO: move to new func "progress"
                     setFoodPos(getFoodPositions(10));
-                    setUpdateInt((prevInt) => getNextUpdateInterval(prevInt));
+                    setUpdatesPerSec((prev) => prev + updateStep);
                     setScore((prev) => prev + 1);
                 }
             }
             setSnakeDots(dots);
-            currentTimeout = setTimeout(moveSnake, updateIntRef.current);
+            currentTimeout = setTimeout(
+                moveSnake,
+                calcInterval(updatesPerSecRef.current)
+            );
         };
-        currentTimeout = setTimeout(moveSnake, updateIntRef.current);
+        currentTimeout = setTimeout(moveSnake, updatesPerSecRef.current);
         return () => {
             clearTimeout(currentTimeout);
         };
@@ -183,7 +182,7 @@ function App() {
                 <Snake dots={snakeDots} />
                 <Food positions={foodPos} />
             </div>
-            <div className="gameInfo">Current speed {updateInt}</div>
+            <div className="gameInfo">Current speed: {updatesPerSec}/sec</div>
         </div>
     );
 }
